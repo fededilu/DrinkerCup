@@ -1,4 +1,10 @@
 target/
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+.vite-dev.*
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
