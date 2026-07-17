@@ -168,6 +168,120 @@ p {
   text-align: center;
 }
 
+.counterPage {
+  display: grid;
+  gap: 22px;
+}
+
+.counterHeader {
+  display: grid;
+  gap: 8px;
+}
+
+.counterHeader h1,
+.counterHeader p {
+  margin: 0;
+}
+
+.drinkGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+.drinkPanel {
+  display: grid;
+  align-items: center;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 96px 220px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #ded7cb;
+  border-radius: 8px;
+  background: #fffaf2;
+  box-shadow: 0 12px 40px rgba(47, 34, 25, 0.06);
+}
+
+.drinkPanel h2 {
+  margin: 0 0 6px;
+  color: #2f2219;
+  font-size: 1.05rem;
+}
+
+.drinkPanel p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.drinkCount {
+  display: grid;
+  place-items: center;
+  min-height: 72px;
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2f2219;
+  font-size: 2.2rem;
+  font-weight: 900;
+}
+
+.counterActions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.counterActions button,
+.savePanel button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.counterActions button {
+  background: #efe6d9;
+  color: #3f342b;
+}
+
+.counterActions button:hover:not(:disabled),
+.savePanel button:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.savePanel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.savePanel button {
+  min-width: 132px;
+  padding: 0 18px;
+  background: #b25d13;
+  color: white;
+}
+
+.savePanel button:disabled,
+.counterActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.savePanel .secondaryButton {
+  border: 1px solid #cfc6ba;
+  background: #ffffff;
+  color: #4d4036;
+}
+
+.success {
+  margin: 0;
+  color: #137333;
+  font-weight: 800;
+}
+
 @media (max-width: 640px) {
   .navbar {
     align-items: flex-start;
@@ -187,5 +301,23 @@ p {
   .authPanel,
   .panel {
     padding: 22px;
+  }
+
+  .drinkGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .drinkPanel {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .savePanel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .savePanel button {
+    width: 100%;
   }
 }
