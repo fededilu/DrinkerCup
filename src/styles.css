@@ -282,6 +282,135 @@ p {
   font-weight: 800;
 }
 
+.profilePage {
+  display: grid;
+  gap: 22px;
+}
+
+.profilePanel {
+  padding: 24px;
+  border: 1px solid #ded7cb;
+  border-radius: 8px;
+  background: #fffaf2;
+  box-shadow: 0 12px 40px rgba(47, 34, 25, 0.06);
+}
+
+.profilePanel h2 {
+  margin: 0 0 18px;
+  color: #2f2219;
+  font-size: 1.15rem;
+}
+
+.profileDetails {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.profileDetails div {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.profileDetails dt,
+.summaryItem span {
+  color: #6c5f53;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.profileDetails dd {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+  color: #2f2219;
+  font-weight: 900;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.summaryItem {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.summaryItem strong {
+  color: #2f2219;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.summaryItem button {
+  min-height: 38px;
+  border: 1px solid #cfc6ba;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #4d4036;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.historyPanel {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.historyPanel h3 {
+  margin: 0;
+  color: #2f2219;
+  font-size: 1rem;
+}
+
+.historyPanel p {
+  margin: 0;
+}
+
+.historyList {
+  display: grid;
+  gap: 10px;
+}
+
+.historyItem {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  grid-template-columns: 72px minmax(0, 1fr) 170px;
+  padding: 12px 14px;
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.historyItem strong {
+  color: #2f2219;
+  font-size: 1.2rem;
+}
+
+.historyItem span {
+  color: #3f342b;
+  font-weight: 800;
+}
+
+.historyItem time {
+  color: #6c5f53;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: right;
+}
+
 @media (max-width: 640px) {
   .navbar {
     align-items: flex-start;
@@ -319,5 +448,24 @@ p {
 
   .savePanel button {
     width: 100%;
+  }
+
+  .profilePanel {
+    padding: 20px;
+  }
+
+  .profileDetails,
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .historyItem {
+    align-items: start;
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .historyItem time {
+    grid-column: 1 / -1;
+    text-align: left;
   }
 }

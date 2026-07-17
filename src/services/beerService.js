@@ -1,4 +1,14 @@
-import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig.js';
 
 export async function getUserProfile(userId) {
@@ -46,6 +56,85 @@ export async function saveDrinkEntries({ user, profile, entries }) {
   await batch.commit();
 }
 
+export function subscribeToUserDrinkSummary(userId, callback, onError) {
+  const userEntriesQuery = query(
+    collection(db, 'drinkEntries'),
+    where('userId', '==', userId),
+  );
+
+  return onSnapshot(
+    userEntriesQuery,
+    (snapshot) => {
+      const summary = {
+        beer05: 0,
+        beer066: 0,
+        cocktail: 0,
+        totalEntries: snapshot.size,
+      };
+
+      snapshot.forEach((entrySnapshot) => {
+        const entry = entrySnapshot.data();
+
+        if (entry.type === 'beer' && entry.volumeLiters === 0.5) {
+          summary.beer05 += entry.quantity;
+          return;
+        }
+
+        if (entry.type === 'beer' && entry.volumeLiters === 0.66) {
+          summary.beer066 += entry.quantity;
+          return;
+        }
+
+        if (entry.type === 'cocktail') {
+          summary.cocktail += entry.quantity;
+        }
+      });
+
+      callback(summary);
+    },
+    onError,
+  );
+}
+
+export async function getUserDrinkHistory(userId, filter) {
+  const historyQuery = query(
+    collection(db, 'drinkEntries'),
+    where('userId', '==', userId),
+  );
+  const snapshot = await getDocs(historyQuery);
+
+  return snapshot.docs.map((entrySnapshot) => ({
+    id: entrySnapshot.id,
+    ...entrySnapshot.data(),
+  }))
+    .filter((entry) => matchesDrinkFilter(entry, filter))
+    .sort((firstEntry, secondEntry) => {
+      return getTimestampMillis(secondEntry) - getTimestampMillis(firstEntry);
+    });
+}
+
 export function subscribeToRanking() {
   throw new Error('Ranking persistence is not implemented yet.');
+}
+
+function matchesDrinkFilter(entry, filter) {
+  if (entry.type !== filter.type) {
+    return false;
+  }
+
+  if (filter.type !== 'beer') {
+    return true;
+  }
+
+  return Number(entry.volumeLiters) === filter.volumeLiters;
+}
+
+function getTimestampMillis(entry) {
+  const timestamp = entry.createdAt || entry.timestamp;
+
+  if (!timestamp?.toMillis) {
+    return 0;
+  }
+
+  return timestamp.toMillis();
 }
