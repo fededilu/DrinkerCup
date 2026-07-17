@@ -4,6 +4,8 @@ import { registerWithEmail } from '../services/authService.js';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +24,12 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      await registerWithEmail(email, password);
+      await registerWithEmail({
+        email,
+        password,
+        firstName,
+        lastName,
+      });
       navigate('/', { replace: true });
     } catch (registerError) {
       setError(getAuthErrorMessage(registerError.code));
@@ -35,6 +42,28 @@ export default function RegisterPage() {
     <section className="authPanel">
       <h1>Registrati</h1>
       <form className="authForm" onSubmit={handleSubmit}>
+        <label>
+          Nome
+          <input
+            type="text"
+            value={firstName}
+            onChange={(event) => setFirstName(event.target.value)}
+            autoComplete="given-name"
+            required
+          />
+        </label>
+
+        <label>
+          Cognome
+          <input
+            type="text"
+            value={lastName}
+            onChange={(event) => setLastName(event.target.value)}
+            autoComplete="family-name"
+            required
+          />
+        </label>
+
         <label>
           Email
           <input
@@ -92,6 +121,8 @@ function getAuthErrorMessage(code) {
       return 'Email non valida.';
     case 'auth/weak-password':
       return 'La password deve contenere almeno 6 caratteri.';
+    case 'permission-denied':
+      return 'Account creato, ma salvataggio profilo non autorizzato. Controlla le regole Firestore.';
     default:
       return 'Registrazione non riuscita. Riprova.';
   }
