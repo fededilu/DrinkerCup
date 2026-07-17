@@ -1,4 +1,13 @@
-import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig.js';
 
 export async function getUserProfile(userId) {
@@ -44,6 +53,46 @@ export async function saveDrinkEntries({ user, profile, entries }) {
   });
 
   await batch.commit();
+}
+
+export function subscribeToUserDrinkSummary(userId, callback, onError) {
+  const userEntriesQuery = query(
+    collection(db, 'drinkEntries'),
+    where('userId', '==', userId),
+  );
+
+  return onSnapshot(
+    userEntriesQuery,
+    (snapshot) => {
+      const summary = {
+        beer05: 0,
+        beer066: 0,
+        cocktail: 0,
+        totalEntries: snapshot.size,
+      };
+
+      snapshot.forEach((entrySnapshot) => {
+        const entry = entrySnapshot.data();
+
+        if (entry.type === 'beer' && entry.volumeLiters === 0.5) {
+          summary.beer05 += entry.quantity;
+          return;
+        }
+
+        if (entry.type === 'beer' && entry.volumeLiters === 0.66) {
+          summary.beer066 += entry.quantity;
+          return;
+        }
+
+        if (entry.type === 'cocktail') {
+          summary.cocktail += entry.quantity;
+        }
+      });
+
+      callback(summary);
+    },
+    onError,
+  );
 }
 
 export function subscribeToRanking() {
