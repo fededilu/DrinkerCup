@@ -352,6 +352,65 @@ p {
   line-height: 1;
 }
 
+.summaryItem button {
+  min-height: 38px;
+  border: 1px solid #cfc6ba;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #4d4036;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.historyPanel {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.historyPanel h3 {
+  margin: 0;
+  color: #2f2219;
+  font-size: 1rem;
+}
+
+.historyPanel p {
+  margin: 0;
+}
+
+.historyList {
+  display: grid;
+  gap: 10px;
+}
+
+.historyItem {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  grid-template-columns: 72px minmax(0, 1fr) 170px;
+  padding: 12px 14px;
+  border: 1px solid #eadfce;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.historyItem strong {
+  color: #2f2219;
+  font-size: 1.2rem;
+}
+
+.historyItem span {
+  color: #3f342b;
+  font-weight: 800;
+}
+
+.historyItem time {
+  color: #6c5f53;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: right;
+}
+
 @media (max-width: 640px) {
   .navbar {
     align-items: flex-start;
@@ -398,5 +457,15 @@ p {
   .profileDetails,
   .summaryGrid {
     grid-template-columns: 1fr;
+  }
+
+  .historyItem {
+    align-items: start;
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .historyItem time {
+    grid-column: 1 / -1;
+    text-align: left;
   }
 }

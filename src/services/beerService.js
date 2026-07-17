@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   query,
   serverTimestamp,
@@ -95,6 +96,45 @@ export function subscribeToUserDrinkSummary(userId, callback, onError) {
   );
 }
 
+export async function getUserDrinkHistory(userId, filter) {
+  const historyQuery = query(
+    collection(db, 'drinkEntries'),
+    where('userId', '==', userId),
+  );
+  const snapshot = await getDocs(historyQuery);
+
+  return snapshot.docs.map((entrySnapshot) => ({
+    id: entrySnapshot.id,
+    ...entrySnapshot.data(),
+  }))
+    .filter((entry) => matchesDrinkFilter(entry, filter))
+    .sort((firstEntry, secondEntry) => {
+      return getTimestampMillis(secondEntry) - getTimestampMillis(firstEntry);
+    });
+}
+
 export function subscribeToRanking() {
   throw new Error('Ranking persistence is not implemented yet.');
+}
+
+function matchesDrinkFilter(entry, filter) {
+  if (entry.type !== filter.type) {
+    return false;
+  }
+
+  if (filter.type !== 'beer') {
+    return true;
+  }
+
+  return Number(entry.volumeLiters) === filter.volumeLiters;
+}
+
+function getTimestampMillis(entry) {
+  const timestamp = entry.createdAt || entry.timestamp;
+
+  if (!timestamp?.toMillis) {
+    return 0;
+  }
+
+  return timestamp.toMillis();
 }
