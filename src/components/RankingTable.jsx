@@ -55,7 +55,9 @@ function RankingItem({ item, position }) {
       <span className="rankingPosition">{position}</span>
       <div className="rankingIdentity">
         <strong>{item.displayName || `${item.firstName} ${item.lastName}`}</strong>
-        <span>{formatDrinkBreakdown(item)}</span>
+        <span>{format05L(item)}</span>
+        <span>{format06L(item)}</span>
+        <span>{formatCocktail(item)}</span>
       </div>
       <strong className="rankingPoints">{formatPoints(item.points)} pt</strong>
     </article>
@@ -86,7 +88,19 @@ function formatPoints(points = 0) {
 }
 
 function formatDrinkBreakdown(item) {
-  return `${item.beer05Total || 0} x 0,5L · ${item.beer066Total || 0} x 0,66L · ${
-    item.cocktailTotal || 0
-  } cocktail`;
+  return `${item.beer05Total || 0} x 0,5L ${item.beer066Total || 0} x 0,66L · ${
+    item.cocktailTotal || 0} cocktail`;
+}
+
+function format05L(item){
+    return `${item.beer05Total || 0} x 0,5L`
+}
+
+
+function format06L(item){
+    return `${item.beer066Total || 0} x 0,66L`
+}
+
+function formatCocktail(item){
+    return `${item.cocktailTotal || 0} x cocktail`
 }

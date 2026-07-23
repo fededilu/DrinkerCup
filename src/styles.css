@@ -28,6 +28,8 @@ a {
 }
 
 .app {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
@@ -74,9 +76,51 @@ a {
 }
 
 .page {
+  flex: 1;
   width: min(100%, 960px);
   margin: 0 auto;
   padding: 48px 20px;
+}
+
+.siteFooter {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 28px 32px;
+  border-top: 1px solid #ded7cb;
+  background: #fffaf2;
+}
+
+.footerColumn {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.footerColumn h2 {
+  margin: 0;
+  color: #2f2219;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+}
+
+.footerColumn p,
+.footerColumn a {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #5c5148;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.footerColumn a {
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.footerColumn a:hover {
+  color: #b25d13;
 }
 
 .authPanel,
@@ -285,6 +329,50 @@ p {
 .profilePage {
   display: grid;
   gap: 22px;
+}
+
+.infoPage {
+  display: grid;
+  gap: 22px;
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.infoPage > h1 {
+  margin-bottom: 2px;
+}
+
+.infoSection {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid #ded7cb;
+  border-radius: 8px;
+  background: #fffaf2;
+  box-shadow: 0 12px 40px rgba(47, 34, 25, 0.06);
+}
+
+.infoSection h2 {
+  margin: 0;
+  color: #2f2219;
+  font-size: 1.15rem;
+}
+
+.infoSection p {
+  margin: 0;
+}
+
+.infoSection ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+  color: #5c5148;
+  line-height: 1.6;
+}
+
+.infoSection li::marker {
+  color: #b25d13;
 }
 
 .profilePanel {
@@ -500,6 +588,11 @@ p {
     padding-top: 28px;
   }
 
+  .siteFooter {
+    grid-template-columns: 1fr;
+    padding: 24px 20px;
+  }
+
   .authPanel,
   .panel {
     padding: 22px;
@@ -524,6 +617,10 @@ p {
   }
 
   .profilePanel {
+    padding: 20px;
+  }
+
+  .infoSection {
     padding: 20px;
   }
 
