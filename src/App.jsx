@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import Footer from './components/Footer.jsx';
 import Navbar from './components/Navbar.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import HomePage from './pages/HomePage.jsx';
+import HowItWorksPage from './pages/HowItWorksPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import RankingPage from './pages/RankingPage.jsx';
@@ -15,6 +17,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/spiegazione" element={<HowItWorksPage />} />
           <Route
             path="/"
             element={
@@ -42,6 +45,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 }
