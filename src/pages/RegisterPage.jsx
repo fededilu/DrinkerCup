@@ -154,6 +154,12 @@ function getAuthErrorMessage(code) {
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
       return 'Accesso con Google annullato.';
+    case 'auth/popup-blocked':
+      return 'Il browser ha bloccato il popup di Google. Consenti i popup per questo sito e riprova.';
+    case 'auth/operation-not-allowed':
+      return 'Accesso con Google non abilitato in Firebase Authentication.';
+    case 'auth/unauthorized-domain':
+      return 'Dominio non autorizzato in Firebase Authentication. Aggiungi il dominio del sito negli Authorized domains.';
     case 'auth/account-exists-with-different-credential':
       return 'Esiste gia un account con questa email. Accedi con il metodo usato in precedenza.';
     case 'permission-denied':
