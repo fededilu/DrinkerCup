@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registerWithEmail } from '../services/authService.js';
+import GoogleIcon from '../components/GoogleIcon.jsx';
+import { loginWithGoogle, registerWithEmail } from '../services/authService.js';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -35,6 +37,20 @@ export default function RegisterPage() {
       setError(getAuthErrorMessage(registerError.code));
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleGoogleRegister() {
+    setError('');
+    setIsGoogleSubmitting(true);
+
+    try {
+      await loginWithGoogle();
+      navigate('/', { replace: true });
+    } catch (registerError) {
+      setError(getAuthErrorMessage(registerError.code));
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   }
 
@@ -106,6 +122,20 @@ export default function RegisterPage() {
         </button>
       </form>
 
+      <div className="authDivider" aria-hidden="true">
+        <span>oppure</span>
+      </div>
+
+      <button
+        className="googleButton"
+        type="button"
+        onClick={handleGoogleRegister}
+        disabled={isGoogleSubmitting}
+      >
+        <GoogleIcon />
+        {isGoogleSubmitting ? 'Registrazione con Google...' : 'Registrati con Google'}
+      </button>
+
       <p className="authSwitch">
         Hai gia un account? <Link to="/login">Accedi</Link>
       </p>
@@ -121,6 +151,11 @@ function getAuthErrorMessage(code) {
       return 'Email non valida.';
     case 'auth/weak-password':
       return 'La password deve contenere almeno 6 caratteri.';
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return 'Accesso con Google annullato.';
+    case 'auth/account-exists-with-different-credential':
+      return 'Esiste gia un account con questa email. Accedi con il metodo usato in precedenza.';
     case 'permission-denied':
       return 'Account creato, ma salvataggio profilo non autorizzato. Controlla le regole Firestore.';
     default:
