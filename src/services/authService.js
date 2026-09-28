@@ -1,11 +1,14 @@
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebaseConfig.js';
 
 export async function registerWithEmail({ email, password, firstName, lastName }) {
@@ -14,14 +17,10 @@ export async function registerWithEmail({ email, password, firstName, lastName }
 
   await updateProfile(userCredential.user, { displayName });
 
-  await setDoc(doc(db, 'users', userCredential.user.uid), {
-    uid: userCredential.user.uid,
+  await saveUserProfile(userCredential.user, {
     firstName: firstName.trim(),
     lastName: lastName.trim(),
     displayName,
-    email: userCredential.user.email,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
   });
 
   return userCredential;
@@ -29,6 +28,20 @@ export async function registerWithEmail({ email, password, firstName, lastName }
 
 export function loginWithEmail(email, password) {
   return signInWithEmailAndPassword(auth, email, password);
+}
+
+export async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  const userCredential = await signInWithPopup(auth, provider);
+  await saveUserProfile(userCredential.user);
+
+  return userCredential;
+}
+
+export function resetPassword(email) {
+  return sendPasswordResetEmail(auth, email);
 }
 
 export function logout() {
@@ -41,4 +54,26 @@ export function getCurrentUser() {
 
 export function subscribeToAuthChanges(callback) {
   return onAuthStateChanged(auth, callback);
+}
+
+async function saveUserProfile(user, profile = {}) {
+  const displayName = profile.displayName || user.displayName || '';
+  const [fallbackFirstName = '', ...fallbackLastNameParts] = displayName.split(' ');
+  const fallbackLastName = fallbackLastNameParts.join(' ');
+  const userRef = doc(db, 'users', user.uid);
+  const userSnapshot = await getDoc(userRef);
+
+  await setDoc(
+    userRef,
+    {
+      uid: user.uid,
+      firstName: profile.firstName ?? fallbackFirstName,
+      lastName: profile.lastName ?? fallbackLastName,
+      displayName: displayName || user.email || '',
+      email: user.email,
+      ...(!userSnapshot.exists() ? { createdAt: serverTimestamp() } : {}),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 }

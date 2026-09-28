@@ -191,10 +191,63 @@ p {
   opacity: 0.7;
 }
 
+.authForm .textButton {
+  justify-self: start;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #9a4f0e;
+  font-weight: 800;
+}
+
 .error {
   margin: 0;
   color: #b42318;
   font-weight: 700;
+}
+
+.authDivider {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  margin: 22px 0;
+  color: #6c5f53;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.authDivider::before,
+.authDivider::after {
+  height: 1px;
+  background: #ded7cb;
+  content: "";
+}
+
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #cfc6ba;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2f2219;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.googleButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.googleIcon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
 }
 
 .authSwitch {
