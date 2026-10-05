@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import Footer from './components/Footer.jsx';
 import Navbar from './components/Navbar.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import ChampionshipPage from './pages/ChampionshipPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import HowItWorksPage from './pages/HowItWorksPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -23,6 +24,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/championship/:championshipId"
+            element={
+              <ProtectedRoute>
+                <ChampionshipPage />
               </ProtectedRoute>
             }
           />

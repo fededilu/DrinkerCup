@@ -24,7 +24,6 @@ export default function Navbar() {
           <>
             <NavLink to="/">Home</NavLink>
             <NavLink to="/profile">Profilo</NavLink>
-            <NavLink to="/ranking">Ranking</NavLink>
             <button className="linkButton" type="button" onClick={handleLogout}>
               Esci
             </button>

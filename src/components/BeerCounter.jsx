@@ -1,6 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getCurrentUser } from '../services/authService.js';
-import { getUserProfile, saveDrinkEntries } from '../services/beerService.js';
+import {
+  getUserProfile,
+  saveChampionshipDrinkEntries,
+  saveDrinkEntries,
+} from '../services/beerService.js';
 
 const initialCounts = {
   beer05: 0,
@@ -31,11 +35,19 @@ const drinkConfig = [
   },
 ];
 
-export default function BeerCounter() {
-  const [counts, setCounts] = useState(initialCounts);
+export default function BeerCounter({ championship = null }) {
+  const drinks = championship?.drinkConfig || drinkConfig;
+  const startingCounts = useMemo(() => {
+    return drinks.reduce((result, drink) => ({ ...result, [drink.key]: 0 }), {});
+  }, [drinks]);
+  const [counts, setCounts] = useState(startingCounts);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setCounts(startingCounts);
+  }, [startingCounts]);
 
   const hasChanges = useMemo(
     () => Object.values(counts).some((quantity) => quantity !== 0),
@@ -60,7 +72,7 @@ export default function BeerCounter() {
       return;
     }
 
-    const summary = drinkConfig
+    const summary = drinks
       .filter((drink) => counts[drink.key] !== 0)
       .map((drink) => `${formatSignedQuantity(counts[drink.key])} ${drink.title}`)
       .join('\n');
@@ -82,14 +94,21 @@ export default function BeerCounter() {
 
     try {
       const profile = await getUserProfile(user.uid);
-      const entries = drinkConfig.map((drink) => ({
+      const entries = drinks.map((drink) => ({
+        key: drink.key,
         type: drink.type,
         volumeLiters: drink.volumeLiters,
+        points: drink.points,
         quantity: counts[drink.key],
       }));
 
-      await saveDrinkEntries({ user, profile, entries });
-      setCounts(initialCounts);
+      if (championship) {
+        await saveChampionshipDrinkEntries({ user, profile, championship, entries });
+      } else {
+        await saveDrinkEntries({ user, profile, entries });
+      }
+
+      setCounts(startingCounts);
       setSuccessMessage('Dati salvati correttamente.');
     } catch (saveError) {
       setError(getSaveErrorMessage(saveError.code));
@@ -102,11 +121,15 @@ export default function BeerCounter() {
     <section className="counterPage">
       <div className="counterHeader">
         <h1>Registra bevande</h1>
-        <p>Le birre valide sono solo nei formati 0,5L e 0,66L.</p>
+        <p>
+          {championship
+            ? `Campionato: ${championship.name}`
+            : 'Le birre valide sono solo nei formati 0,5L e 0,66L.'}
+        </p>
       </div>
 
       <div className="drinkGrid">
-        {drinkConfig.map((drink) => (
+        {drinks.map((drink) => (
           <article className="drinkPanel" key={drink.key}>
             <div>
               <h2>{drink.title}</h2>
@@ -142,7 +165,7 @@ export default function BeerCounter() {
         <button
           className="secondaryButton"
           type="button"
-          onClick={() => setCounts(initialCounts)}
+          onClick={() => setCounts(startingCounts)}
           disabled={isSaving || !hasChanges}
         >
           Annulla modifiche
