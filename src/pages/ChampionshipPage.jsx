@@ -35,7 +35,7 @@ export default function ChampionshipPage() {
     return <div className="status">Caricamento campionato...</div>;
   }
 
-  if (!championship) {
+  if (!championship || championship.status === 'DELETED') {
     return <div className="status">Campionato non trovato.</div>;
   }
 

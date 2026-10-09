@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getCurrentUser } from '../services/authService.js';
 import {
   getUserDrinkHistory,
   getUserProfile,
   subscribeToUserDrinkSummary,
 } from '../services/beerService.js';
+import {
+  getChampionshipRole,
+  isChampionshipAdmin,
+  removeChampionshipMembers,
+  subscribeToUserChampionships,
+} from '../services/championshipService.js';
 
 const emptySummary = {
   beer05: 0,
@@ -33,8 +40,10 @@ const detailFilters = {
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [summary, setSummary] = useState(emptySummary);
+  const [championships, setChampionships] = useState([]);
   const [activeDetail, setActiveDetail] = useState('');
   const [history, setHistory] = useState([]);
+  const [deletingChampionshipId, setDeletingChampionshipId] = useState('');
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,10 +81,16 @@ export default function ProfilePage() {
       setSummary,
       () => setError('Impossibile caricare il riepilogo consumazioni.'),
     );
+    const unsubscribeChampionships = subscribeToUserChampionships(
+      user.uid,
+      setChampionships,
+      () => setError('Impossibile caricare i campionati del profilo.'),
+    );
 
     return () => {
       isMounted = false;
       unsubscribe();
+      unsubscribeChampionships();
     };
   }, []);
 
@@ -113,6 +128,33 @@ export default function ProfilePage() {
       setError(getHistoryErrorMessage(historyError.code));
     } finally {
       setIsHistoryLoading(false);
+    }
+  }
+
+  async function handleDeleteChampionship(championship) {
+    setError('');
+
+    if (!user) {
+      setError('Sessione scaduta. Effettua di nuovo il login.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Vuoi eliminare "${championship.name}"? Gli utenti non saranno piu associati a questo campionato.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingChampionshipId(championship.id);
+
+    try {
+      await removeChampionshipMembers({ user, championshipId: championship.id });
+    } catch (deleteError) {
+      setError(getChampionshipDeleteErrorMessage(deleteError.code));
+    } finally {
+      setDeletingChampionshipId('');
     }
   }
 
@@ -179,7 +221,57 @@ export default function ProfilePage() {
           />
         ) : null}
       </section>
+
+      <section className="profilePanel" aria-labelledby="profile-championships-title">
+        <h2 id="profile-championships-title">Campionati</h2>
+        {championships.length === 0 ? (
+          <p>Nessun campionato creato o partecipato.</p>
+        ) : (
+          <div className="profileChampionshipList">
+            {championships.map((championship) => (
+              <ProfileChampionshipItem
+                championship={championship}
+                isDeleting={deletingChampionshipId === championship.id}
+                isAdmin={isChampionshipAdmin(championship, user?.uid)}
+                key={championship.id}
+                onDelete={() => handleDeleteChampionship(championship)}
+                role={getChampionshipRole(championship, user?.uid)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </section>
+  );
+}
+
+function ProfileChampionshipItem({ championship, isAdmin, isDeleting, onDelete, role }) {
+  return (
+    <article className="profileChampionshipItem">
+      <Link className="profileChampionshipLink" to={`/championship/${championship.id}`}>
+        <strong>{championship.name}</strong>
+        <span>{role === 'ADMIN' ? 'Creato da te' : 'Partecipante'}</span>
+        <span>Codice {championship.code}</span>
+      </Link>
+      {isAdmin ? (
+        <button
+          aria-label={`Elimina ${championship.name}`}
+          className="dangerIconButton"
+          disabled={isDeleting}
+          onClick={onDelete}
+          title="Elimina campionato"
+          type="button"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M3 6h18" />
+            <path d="M8 6V4h8v2" />
+            <path d="M6 6l1 15h10l1-15" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+          </svg>
+        </button>
+      ) : null}
+    </article>
   );
 }
 
@@ -264,5 +356,16 @@ function getHistoryErrorMessage(code) {
       return 'Non hai i permessi per leggere questi movimenti.';
     default:
       return 'Impossibile caricare la cronologia movimenti.';
+  }
+}
+
+function getChampionshipDeleteErrorMessage(code) {
+  switch (code) {
+    case 'championship-not-found':
+      return 'Campionato non trovato.';
+    case 'permission-denied':
+      return 'Solo un ADMIN puo eliminare il campionato.';
+    default:
+      return 'Eliminazione del campionato non riuscita. Riprova.';
   }
 }
