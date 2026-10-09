@@ -2,6 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isChampionshipAdmin() {
+      return request.auth != null
+        && (
+          resource.data.adminId == request.auth.uid
+          || resource.data.memberRoles[request.auth.uid] == 'ADMIN'
+        );
+    }
+
+    function isActiveChampionship() {
+      return !('status' in resource.data) || resource.data.status != 'DELETED';
+    }
+
+    function isJoiningChampionship() {
+      return request.auth != null
+        && isActiveChampionship()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['memberIds', 'memberRoles', 'memberCount', 'updatedAt'])
+        && request.resource.data.memberIds.hasAny([request.auth.uid])
+        && request.resource.data.memberRoles[request.auth.uid] == 'PLAYER';
+    }
+
     match /users/{userId} {
       allow create: if request.auth != null
         && request.auth.uid == userId
@@ -61,15 +82,14 @@ service cloud.firestore {
         && request.resource.data.adminId == request.auth.uid
         && request.resource.data.memberIds is list
         && request.resource.data.memberIds.hasAny([request.auth.uid])
+        && request.resource.data.memberRoles[request.auth.uid] == 'ADMIN'
+        && request.resource.data.status == 'ACTIVE'
         && request.resource.data.name is string
         && request.resource.data.code is string
         && request.resource.data.drinkConfig is list;
 
       allow update: if request.auth != null
-        && (
-          resource.data.adminId == request.auth.uid
-          || request.resource.data.memberIds.hasAny([request.auth.uid])
-        );
+        && (isChampionshipAdmin() || isJoiningChampionship());
 
       allow delete: if false;
     }

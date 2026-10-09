@@ -96,6 +96,11 @@ export const availableDrinks = [
   },
 ];
 
+export const CHAMPIONSHIP_ROLES = {
+  ADMIN: 'ADMIN',
+  PLAYER: 'PLAYER',
+};
+
 export function subscribeToUserChampionships(userId, callback, onError) {
   const championshipsQuery = query(
     collection(db, 'championships'),
@@ -108,6 +113,7 @@ export function subscribeToUserChampionships(userId, callback, onError) {
       callback(
         snapshot.docs
           .map((item) => ({ id: item.id, ...item.data() }))
+          .filter((item) => item.status !== 'DELETED')
           .sort((first, second) => getTimestampMillis(second.createdAt) - getTimestampMillis(first.createdAt)),
       );
     },
@@ -156,7 +162,11 @@ export async function createChampionship({ user, profile, name, durationDays, dr
       adminDisplayName: displayName,
       drinkConfig: enabledDrinks,
       memberIds: [user.uid],
+      memberRoles: {
+        [user.uid]: CHAMPIONSHIP_ROLES.ADMIN,
+      },
       memberCount: 1,
+      status: 'ACTIVE',
       startsAt: Timestamp.fromDate(now),
       endsAt: Timestamp.fromDate(endsAt),
       createdAt: serverTimestamp(),
@@ -193,6 +203,14 @@ export async function joinChampionshipByCode({ user, profile, code }) {
   }
 
   const championshipDoc = snapshot.docs[0];
+  const championship = championshipDoc.data();
+
+  if (championship.status === 'DELETED') {
+    const error = new Error('Campionato non trovato.');
+    error.code = 'championship-not-found';
+    throw error;
+  }
+
   await joinChampionship({ user, profile, championshipId: championshipDoc.id });
 
   return championshipDoc.id;
@@ -213,12 +231,24 @@ export async function joinChampionship({ user, profile, championshipId }) {
     }
 
     const championship = championshipSnapshot.data();
+
+    if (championship.status === 'DELETED') {
+      const error = new Error('Campionato non trovato.');
+      error.code = 'championship-not-found';
+      throw error;
+    }
+
     const memberIds = championship.memberIds || [];
+    const memberRoles = championship.memberRoles || {};
     const statsSnapshot = await transaction.get(statsRef);
 
     if (!memberIds.includes(user.uid)) {
       transaction.update(championshipRef, {
         memberIds: [...memberIds, user.uid],
+        memberRoles: {
+          ...memberRoles,
+          [user.uid]: memberRoles[user.uid] || CHAMPIONSHIP_ROLES.PLAYER,
+        },
         memberCount: Number(championship.memberCount || memberIds.length) + 1,
         updatedAt: serverTimestamp(),
       });
@@ -248,6 +278,37 @@ export function subscribeToChampionship(championshipId, callback, onError) {
   );
 }
 
+export async function removeChampionshipMembers({ user, championshipId }) {
+  const championshipRef = doc(db, 'championships', championshipId);
+
+  await runTransaction(db, async (transaction) => {
+    const championshipSnapshot = await transaction.get(championshipRef);
+
+    if (!championshipSnapshot.exists()) {
+      const error = new Error('Campionato non trovato.');
+      error.code = 'championship-not-found';
+      throw error;
+    }
+
+    const championship = championshipSnapshot.data();
+
+    if (!isChampionshipAdmin(championship, user.uid)) {
+      const error = new Error('Operazione non autorizzata.');
+      error.code = 'permission-denied';
+      throw error;
+    }
+
+    transaction.update(championshipRef, {
+      memberIds: [],
+      memberCount: 0,
+      status: 'DELETED',
+      deletedAt: serverTimestamp(),
+      deletedBy: user.uid,
+      updatedAt: serverTimestamp(),
+    });
+  });
+}
+
 async function getActiveOwnedChampionships(userId) {
   const activeQuery = query(
     collection(db, 'championships'),
@@ -257,7 +318,21 @@ async function getActiveOwnedChampionships(userId) {
 
   return snapshot.docs
     .map((item) => item.data())
-    .filter((item) => getTimestampMillis(item.endsAt) > Date.now());
+    .filter((item) => item.status !== 'DELETED' && getTimestampMillis(item.endsAt) > Date.now());
+}
+
+export function getChampionshipRole(championship, userId) {
+  if (!championship || !userId) {
+    return '';
+  }
+
+  return championship.memberRoles?.[userId] || (
+    championship.adminId === userId ? CHAMPIONSHIP_ROLES.ADMIN : CHAMPIONSHIP_ROLES.PLAYER
+  );
+}
+
+export function isChampionshipAdmin(championship, userId) {
+  return getChampionshipRole(championship, userId) === CHAMPIONSHIP_ROLES.ADMIN;
 }
 
 async function generateAvailableCode() {
