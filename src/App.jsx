@@ -3,6 +3,7 @@ import Footer from './components/Footer.jsx';
 import Navbar from './components/Navbar.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import ChampionshipPage from './pages/ChampionshipPage.jsx';
+import CreateChampionshipPage from './pages/CreateChampionshipPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import HowItWorksPage from './pages/HowItWorksPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -24,6 +25,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute>
+                <CreateChampionshipPage />
               </ProtectedRoute>
             }
           />

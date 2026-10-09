@@ -23,6 +23,7 @@ export default function Navbar() {
         {user ? (
           <>
             <NavLink to="/">Home</NavLink>
+            <NavLink to="/create">Crea</NavLink>
             <NavLink to="/profile">Profilo</NavLink>
             <button className="linkButton" type="button" onClick={handleLogout}>
               Esci
