@@ -78,6 +78,69 @@ export async function saveDrinkEntries({ user, profile, entries }) {
   });
 }
 
+export async function saveChampionshipDrinkEntries({
+  user,
+  profile,
+  championship,
+  entries,
+}) {
+  const validEntries = entries.filter((entry) => entry.quantity !== 0);
+
+  if (validEntries.length === 0) {
+    return;
+  }
+
+  const displayName =
+    profile?.displayName || user.displayName || user.email || 'Utente senza nome';
+  const [fallbackFirstName = '', fallbackLastName = ''] = displayName.split(' ');
+  const statDeltas = calculateChampionshipStatDeltas(
+    validEntries,
+    championship.drinkConfig || [],
+  );
+  const entryRefs = validEntries.map(() => doc(collection(db, 'championshipDrinkEntries')));
+  const statsRef = doc(db, 'championshipStats', `${championship.id}_${user.uid}`);
+
+  await runTransaction(db, async (transaction) => {
+    const statsSnapshot = await transaction.get(statsRef);
+    const currentStats = statsSnapshot.exists() ? statsSnapshot.data() : {};
+    const nextStats = buildNextChampionshipStats({
+      currentStats,
+      displayName,
+      email: user.email,
+      firstName: profile?.firstName || fallbackFirstName,
+      lastName: profile?.lastName || fallbackLastName,
+      userId: user.uid,
+      championshipId: championship.id,
+      drinkTotals: statDeltas.drinkTotals,
+      pointsDelta: statDeltas.points,
+    });
+
+    validEntries.forEach((entry, index) => {
+      const payload = {
+        championshipId: championship.id,
+        userId: user.uid,
+        firstName: profile?.firstName || fallbackFirstName,
+        lastName: profile?.lastName || fallbackLastName,
+        displayName,
+        email: user.email,
+        drinkKey: entry.key,
+        type: entry.type,
+        quantity: entry.quantity,
+        points: entry.points,
+        createdAt: serverTimestamp(),
+      };
+
+      if (entry.type === 'beer') {
+        payload.volumeLiters = entry.volumeLiters;
+      }
+
+      transaction.set(entryRefs[index], payload);
+    });
+
+    transaction.set(statsRef, nextStats);
+  });
+}
+
 export function subscribeToUserDrinkSummary(userId, callback, onError) {
   const userEntriesQuery = query(
     collection(db, 'drinkEntries'),
@@ -152,6 +215,28 @@ export function subscribeToRanking(callback, onError) {
   );
 }
 
+export function subscribeToChampionshipRanking(championshipId, callback, onError) {
+  const rankingQuery = query(
+    collection(db, 'championshipStats'),
+    where('championshipId', '==', championshipId),
+  );
+
+  return onSnapshot(
+    rankingQuery,
+    (snapshot) => {
+      callback(
+        snapshot.docs
+          .map((statsSnapshot) => ({
+            id: statsSnapshot.id,
+            ...statsSnapshot.data(),
+          }))
+          .sort((first, second) => Number(second.points || 0) - Number(first.points || 0)),
+      );
+    },
+    onError,
+  );
+}
+
 function matchesDrinkFilter(entry, filter) {
   if (entry.type !== filter.type) {
     return false;
@@ -205,6 +290,26 @@ function calculateStatDeltas(entries) {
   );
 }
 
+function calculateChampionshipStatDeltas(entries, drinkConfig) {
+  const pointsByKey = drinkConfig.reduce(
+    (result, drink) => ({ ...result, [drink.key]: Number(drink.points || 0) }),
+    {},
+  );
+
+  return entries.reduce(
+    (deltas, entry) => {
+      deltas.drinkTotals[entry.key] =
+        Number(deltas.drinkTotals[entry.key] || 0) + entry.quantity;
+      deltas.points += entry.quantity * Number(pointsByKey[entry.key] || entry.points || 0);
+      return deltas;
+    },
+    {
+      drinkTotals: {},
+      points: 0,
+    },
+  );
+}
+
 function buildNextStats({
   currentStats,
   displayName,
@@ -230,6 +335,37 @@ function buildNextStats({
     beer066Total,
     cocktailTotal,
     points,
+    updatedAt: serverTimestamp(),
+  };
+}
+
+function buildNextChampionshipStats({
+  currentStats,
+  displayName,
+  email,
+  firstName,
+  lastName,
+  userId,
+  championshipId,
+  drinkTotals,
+  pointsDelta,
+}) {
+  const currentDrinkTotals = currentStats.drinkTotals || {};
+  const nextDrinkTotals = { ...currentDrinkTotals };
+
+  Object.entries(drinkTotals).forEach(([key, value]) => {
+    nextDrinkTotals[key] = Number(nextDrinkTotals[key] || 0) + value;
+  });
+
+  return {
+    championshipId,
+    userId,
+    firstName,
+    lastName,
+    displayName,
+    email,
+    drinkTotals: nextDrinkTotals,
+    points: roundPoints(Number(currentStats.points || 0) + pointsDelta),
     updatedAt: serverTimestamp(),
   };
 }
