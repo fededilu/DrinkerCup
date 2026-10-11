@@ -1,12 +1,15 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import Footer from './components/Footer.jsx';
 import Navbar from './components/Navbar.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import Seo from './components/Seo.jsx';
 import ChampionshipPage from './pages/ChampionshipPage.jsx';
 import CreateChampionshipPage from './pages/CreateChampionshipPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import HowItWorksPage from './pages/HowItWorksPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import LandingPage from './pages/LandingPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import RankingPage from './pages/RankingPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
@@ -14,6 +17,7 @@ import RegisterPage from './pages/RegisterPage.jsx';
 export default function App() {
   return (
     <div className="app">
+      <Seo />
       <Navbar />
       <main className="page">
         <Routes>
@@ -23,7 +27,7 @@ export default function App() {
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute fallback={<LandingPage />}>
                 <HomePage />
               </ProtectedRoute>
             }
@@ -60,7 +64,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <Footer />

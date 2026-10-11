@@ -27,6 +27,19 @@ a {
   color: inherit;
 }
 
+.landingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.landingActions .primaryAction {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .app {
   display: flex;
   flex-direction: column;

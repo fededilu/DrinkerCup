@@ -4,14 +4,56 @@
   },
   "hosting": {
     "public": "dist",
+    "trailingSlash": false,
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
+    "redirects": [
+      {
+        "regex": "^/spiegazione/$",
+        "destination": "/spiegazione",
+        "type": 301
+      },
+      {
+        "regex": "^/spiegazione/index[.]html$",
+        "destination": "/spiegazione",
+        "type": 301
+      },
+      {
+        "regex": "^/index[.]html$",
+        "destination": "/",
+        "type": 301
+      }
+    ],
+    "headers": [
+      {
+        "regex": "^[/\\\\](login|register|create|profile|ranking|championship)([/\\\\].*)?$",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, follow" }
+        ]
+      },
+      {
+        "regex": "^[/\\\\]robots[.]txt$",
+        "headers": [
+          { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+        ]
+      },
+      {
+        "regex": "^[/\\\\]sitemap[.]xml$",
+        "headers": [
+          { "key": "Content-Type", "value": "application/xml; charset=utf-8" }
+        ]
+      }
+    ],
     "rewrites": [
       {
-        "source": "**",
+        "regex": "^[/\\\\]spiegazione$",
+        "destination": "/spiegazione/index.html"
+      },
+      {
+        "regex": "^[/\\\\](login|register|create|profile|ranking|championship)([/\\\\].*)?$",
         "destination": "/index.html"
       }
     ]

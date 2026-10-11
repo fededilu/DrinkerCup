@@ -1,6 +1,8 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "Drinker Cup",
+  "short_name": "Drinker Cup",
+  "lang": "it",
+  "start_url": "/",
   "icons": [
     {
       "src": "/images/web-app-manifest-192x192.png",
